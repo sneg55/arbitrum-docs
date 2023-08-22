@@ -14,23 +14,25 @@
 
 const visit = require('unist-util-visit');
 
-const plugin = ((options) => {
-  return (async (ast) => {
-
+const plugin = (options) => {
+  return async (ast) => {
     // visit() will match all nodes form the AST that have one of the types specified
     // in the second argument.
     // In those nodes, we want to inject variables in different fields:
     //    - For 'text' and 'code' nodes, we'll look in the "value" property
-    //    - For 'link' nodes, we'll look in the "url" property
-    visit(ast, ['text', 'code', 'link'], (node) => {
+    //    - For 'link' and 'definition' nodes, we'll look in the "url" property
+    // Nodes generated in AST are referenced here: https://github.com/syntax-tree/mdast
+    // Note: to "visit" a node, reference it here in camelCase
+    visit(ast, ['text', 'code', 'link', 'definition'], (node) => {
       let value;
-      switch(node.type) {
-        case "link":
+      switch (node.type) {
+        case 'link':
+        case 'definition':
           value = node.url;
           break;
-        
-        case "text":
-        case "code":
+
+        case 'text':
+        case 'code':
           value = node.value;
           break;
       }
@@ -48,17 +50,18 @@ const plugin = ((options) => {
       });
 
       switch (node.type) {
-        case "link":
+        case 'link':
+        case 'definition':
           node.url = value;
           break;
 
-        case "text":
-        case "code":
+        case 'text':
+        case 'code':
           node.value = value;
           break;
       }
     });
-  });
-});
+  };
+};
 
 module.exports = plugin;
